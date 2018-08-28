@@ -1,0 +1,4 @@
+---
+# defaults file for node
+maxmem: 3072MiB
+currentmem: 3072MiB

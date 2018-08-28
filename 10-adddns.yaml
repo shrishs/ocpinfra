@@ -1,0 +1,117 @@
+# sudo ansible-playbook /home/shsrivas/learning/nopenshift/installation/automation/addnewvm.yaml --tags=clone -e newnodename=node1 --step
+# Above command will provide the ip address
+# Change the ifcfg-ens3 manually with the value got on previous command
+# add a docker storage manually from vm .Make sure while attaching select virtio
+# below tag volume partially works .So dont use it.Problem is that it fails in docker-storage-setup command.
+# sudo ansible-playbook /home/shsrivas/learning/nopenshift/installation/automation/addnewvm.yaml --tags=volume -e nodename=node1 --step
+
+---
+- name: Clone a Virtual Machine
+  hosts: dns
+  connection: local
+  become: true
+  become_user: root
+  serial: 1
+  tags:
+    - clone
+  tasks:
+    - name: Listing all the vms already cloned
+      shell: virsh --connect qemu:///system list --all --name
+      register: vmlist
+
+    - name: check contents for emptiness
+      debug:
+        var: vmlist.stdout_lines
+      when: vmlist.stdout.find(inventory_hostname) == -1
+
+    - name: Cloning a new node
+      shell: virt-clone --connect qemu:///system --original rhel75toclone --name  {{inventory_hostname}} --file /home/shsrivas/VirtualMachines/{{inventory_hostname}}.qcow2
+      when: vmlist.stdout.find(inventory_hostname) == -1
+
+    - name: check groupname
+      debug:
+        var: group_names
+
+    - include_vars: "roles/dns/defaults/main.yml"
+      when: "'dns' in group_names"
+
+    - name: Setting the maximum memory for VirtualMachines
+      shell: virsh setmaxmem {{inventory_hostname}} {{maxmem}} --config
+      when: vmlist.stdout.find(inventory_hostname) == -1
+
+    - name: Setting the current memory for VirtualMachines
+      shell: virsh setmem {{inventory_hostname}} {{currentmem}} --config
+      when: vmlist.stdout.find(inventory_hostname) == -1
+
+    - name: Starting the created VirtualMachines
+      shell: virsh start {{inventory_hostname}}
+      when: vmlist.stdout.find(inventory_hostname) == -1
+
+    - name: Listing the ip address of created vm
+      shell: virsh domifaddr {{inventory_hostname}}|tail -2 | awk '{print $4}'| cut -d/ -f1
+      register: output
+      until: output.stdout != ""
+      delay: 10
+      retries: 5
+
+    - debug: var=output.stdout
+
+- name: copy public key to all Virtual Machine
+  hosts: dns
+  connection: local
+  tags:
+    - copy-id
+  tasks:
+    - name: Listing the ip address of vm ,where public key needs to be copied
+      shell: virsh domifaddr {{inventory_hostname}}|tail -2 | awk '{print $4}'| cut -d/ -f1
+      register: tohostname
+
+    - debug: var=tohostname.stdout
+
+    - name: Set authorized key took from file
+      shell: sshpass -p 'admin#123' ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no {{tohostname.stdout}}
+
+- name: set facts for Virtual Machine
+  hosts: dns
+  connection: local
+  tags:
+    - set-facts
+  tasks:
+    - name: Listing the ip address of vm
+      shell: virsh domifaddr {{inventory_hostname}}|tail -2 | awk '{print $4}'| cut -d/ -f1
+      register: tohostname
+
+    - debug: var=tohostname.stdout
+    - name: :add facts
+      local_action:
+        module: set_fact
+        ansible_ssh_host: "{{ tohostname.stdout }}"
+
+- name: Subscribe the Virtual Machine
+  hosts: dns
+  serial: 1
+  tags:
+    - subscribe
+  tasks:
+    - name: Subscribe to access.redhat.com
+      redhat_subscription:
+        state: present
+        username: "{{ redhat_username }}"
+        password: "{{ redhat_password }}"
+        pool: "{{ redhat_pool }}"
+        consumer_name: "{{inventory_hostname}}"
+    - include_role:
+        name: dns
+      when: "'dns' in group_names"
+
+
+- name: Reboot dns machines
+  hosts: dns
+  connection: local
+  tags:
+    - reboot
+  tasks:
+    - name: reboot {{inventory_hostname}}
+      shell: virsh reboot {{inventory_hostname}}
+    - pause:
+        seconds: 10

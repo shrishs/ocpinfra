@@ -1,0 +1,20 @@
+# sudo ansible-playbook /home/shsrivas/learning/nopenshift/installation/automation/addnewvm.yaml --tags=clone -e newnodename=node1 --step
+# Above command will provide the ip address
+# Change the ifcfg-ens3 manually with the value got on previous command
+# add a docker storage manually from vm .Make sure while attaching select virtio
+# below tag volume partially works .So dont use it.Problem is that it fails in docker-storage-setup command.
+# sudo ansible-playbook /home/shsrivas/learning/nopenshift/installation/automation/addnewvm.yaml --tags=volume -e nodename=node1 --step
+
+---
+- name: testvar
+  hosts: all
+  become: true
+  become_user: root
+  tags:
+    - clone
+  tasks:
+    - name: check contents for emptiness
+      shell: echo {{ redhat_username }}
+      register: test
+    - debug:
+        var: test

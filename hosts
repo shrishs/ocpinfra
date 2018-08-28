@@ -1,0 +1,19 @@
+[dns]
+ocpdns.sandbox.com ansible_ssh_host=192.168.122.31 ipadresstoset=192.168.122.31 shortname=ocpdns
+
+[installer]
+ocpinstaller.sandbox.com ansible_ssh_host=192.168.122.32 ipadresstoset=192.168.122.32 shortname=ocpinstaller
+
+[master]
+master1.sandbox.com ansible_ssh_host=192.168.122.33 ipadresstoset=192.168.122.33 shortname=master1
+#master2.sandbox.com ansible_ssh_host=192.168.122.33 ipadresstoset=192.168.122.34 shortname=master2
+
+[node]
+node1.sandbox.com ansible_ssh_host=192.168.122.34 ipadresstoset=192.168.122.34 shortname=node1
+#node2.sandbox.com ansible_ssh_host=192.168.122.35 ipadresstoset=192.168.122.35 shortname=node2
+
+
+[all:vars]
+redhat_username=xxxxxxxx
+redhat_password=xxxxxxxx
+redhat_pool=xxxxxxxx

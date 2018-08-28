@@ -1,0 +1,36 @@
+
+- name: Unsubscribe the Virtual Machine
+  hosts: all
+  serial: 1
+  tags:
+    - unsubscribe
+  tasks:
+    - name: UnSubscribe to access.redhat.com
+      redhat_subscription:
+        state: absent
+        username: "{{ redhat_username }}"
+        password: "{{ redhat_password }}"
+        pool: "{{ redhat_pool }}"
+        force_register: yes
+
+- name: shutdown the Virtual Machine
+  hosts: all
+  connection: local
+  serial: 1
+  tags:
+    - shutdownvm
+  tasks:
+    - name: shutdown {{inventory_hostname}}
+      shell: virsh shutdown {{inventory_hostname}}
+    - pause:
+        seconds: 15
+
+- name: delete the Virtual Machine
+  hosts: all
+  connection: local
+  serial: 1
+  tags:
+    - deletevm
+  tasks:
+    - name: delete {{inventory_hostname}} node
+      shell: virsh undefine {{inventory_hostname}} --remove-all-storage

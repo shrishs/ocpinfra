@@ -1,0 +1,4 @@
+---
+# defaults file for installer
+maxmem: 512MiB
+currentmem: 512MiB

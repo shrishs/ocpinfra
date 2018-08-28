@@ -1,0 +1,48 @@
+---
+- name: generate key
+  hosts: installer
+  tags:
+    - generate key
+  tasks:
+    - name: generate key
+      shell: "ssh-keygen -f /root/.ssh/id_rsa -P \"\" "
+
+- name: disable and enable required repo
+  hosts: installer,master,node
+  tags:
+    - repos
+  tasks:
+    - name: Disable all repositories
+      shell: subscription-manager repos --disable=*
+
+    - name: Enable all repositories which are needed
+      shell: subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-ose-3.10-rpms --enable=rhel-7-server-ansible-2.4-rpms
+
+- name: Installing sshpass
+  hosts: installer
+  tags:
+    - sshpass
+  tasks:
+    - name: Install sshpass on installer
+      yum:
+        name: sshpass
+        state: latest
+
+
+- name: copy public key form installer to all other nodes
+  hosts: installer
+  tags:
+    - copy-id
+  tasks:
+    - name: check contents for emptiness
+      debug:
+        var: "{{ hostvars[item]['inventory_hostname'] }}"
+      with_items:
+         - "{{ groups['master'] }}"
+         - "{{ groups['node'] }}"
+
+    - name: Set authorized key took from file
+      shell: "sshpass -p 'admin#123' ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no {{ hostvars[item]['inventory_hostname'] }}"
+      with_items:
+         - "{{ groups['master'] }}"
+         - "{{ groups['node'] }}"

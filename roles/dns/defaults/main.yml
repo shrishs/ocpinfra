@@ -1,0 +1,5 @@
+---
+# defaults file for dns
+maxmem: 512MiB
+currentmem: 512MiB
+

@@ -1,0 +1,10 @@
+---
+# tasks file for common
+- name: changing from dhcp to none
+  shell: sed -i -- 's/dhcp/none/' /etc/sysconfig/network-scripts/ifcfg-eth0
+- name: making a static ip
+  shell: echo -e "IPADDR=\"{{ipadresstoset}}\"\nNETMASK=\"255.255.255.0\"\nGATEWAY=\"192.168.122.1\"" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+- name: Adding DNS entry
+  shell: echo -e "DNS1=\"{{ hostvars[item]['ipadresstoset'] }}\"\nDOMAIN=\"sandbox.com\"" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+  with_items:
+     - "{{ groups['dns'] }}"
