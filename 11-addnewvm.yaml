@@ -1,9 +1,9 @@
-# sudo ansible-playbook /home/shsrivas/learning/nopenshift/installation/automation/addnewvm.yaml --tags=clone -e newnodename=node1 --step
-# Above command will provide the ip address
-# Change the ifcfg-ens3 manually with the value got on previous command
-# add a docker storage manually from vm .Make sure while attaching select virtio
-# below tag volume partially works .So dont use it.Problem is that it fails in docker-storage-setup command.
-# sudo ansible-playbook /home/shsrivas/learning/nopenshift/installation/automation/addnewvm.yaml --tags=volume -e nodename=node1 --step
+# ansible-playbook -i ../hosts 11-addnewvm.yaml
+# One can run it for the the single node by limiting it.
+# ansible-playbook -i ../hosts 11-addnewvm.yaml  --limit=node2.sandbox.com
+# Running the same command agin throws exeception but does not harm
+# Need to modify it to work better with Idempotent functionality.
+
 
 ---
 - name: Clone a Virtual Machine

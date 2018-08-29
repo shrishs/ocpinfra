@@ -1,0 +1,73 @@
+# This playbook is used setting up docker
+# sudo ansible-playbook -i ../hosts 21-ocp-docker-storage.yaml
+# This playbook is idempotent
+# In case of individual node after the setup,One can execute the follwoing command
+# sudo ansible-playbook -i ../hosts 21-ocp-docker-storage.yaml --limit=node2.sandbox.com
+
+- name: Adding & attching device for docker
+  hosts: master,node
+  serial: 1
+  connection: local
+  tags:
+    - docker
+    - docker-device
+  tasks:
+    - include_vars: "roles/master/defaults/main.yml"
+      when: "'master' in group_names"
+    - include_vars: "roles/node/defaults/main.yml"
+      when: "'node' in group_names"
+
+    - name: Create volume
+      tags: volume-create
+      shell: virsh vol-create-as default {{inventory_hostname}}-docker {{ dockervolsize }}
+      ignore_errors: yes
+
+    - name: attach volume
+      tags: volume-attach
+      shell: virsh attach-disk {{inventory_hostname}} --source {{volume_path}}/{{inventory_hostname}}-docker --target vdb  --persistent
+      ignore_errors: yes
+
+
+- name: Distribute docker storage configuration
+  hosts: master,node
+  tags:
+    - docker
+    - docker-copy-storage-to-dest
+  tasks:
+    - name: Distribute docker storage configuration
+      tags: docker-copy
+      copy:
+        src: docker-storage-setup
+        dest: /etc/sysconfig/docker-storage-setup
+        force: yes
+
+
+- name: install docker
+  hosts: master,node
+  become: true
+  become_user: root
+  tags:
+    - docker
+    - docker-setup
+  tasks:
+    - name: Install Docker 1.13.1
+      tags: docker-install
+      yum:
+        name: docker-1.13.1
+        state: installed
+    - name: Configure docker storage
+      tags: docker-storage-setup
+      shell: docker-storage-setup
+
+    - name: Check /etc/sysconfig/docker-storage
+      shell: grep overlay2 /etc/sysconfig/docker-storage
+
+    - name: Check LVM docker pool
+      shell: "lvs|grep dockerlv"
+
+    - name: Enable docker system service
+      systemd:
+        name: docker.service
+        daemon_reload: yes
+        enabled: yes
+        state: restarted

@@ -1,10 +1,7 @@
-# sudo ansible-playbook /home/shsrivas/learning/nopenshift/installation/automation/addnewvm.yaml --tags=clone -e newnodename=node1 --step
-# Above command will provide the ip address
-# Change the ifcfg-ens3 manually with the value got on previous command
-# add a docker storage manually from vm .Make sure while attaching select virtio
-# below tag volume partially works .So dont use it.Problem is that it fails in docker-storage-setup command.
-# sudo ansible-playbook /home/shsrivas/learning/nopenshift/installation/automation/addnewvm.yaml --tags=volume -e nodename=node1 --step
-
+# sudo ansible-playbook -i ../hosts 10-adddns.yaml
+# Run the following command in case of adding new node after the initial dns installation setup
+# command 1:sudo ansible -i ../hosts ocpdns.sandbox.com -m shell -a "echo -e \"192.168.122.35 node2.sandbox.com node2\" >> /etc/hosts"
+# command 2:sudo ansible -i ../hosts ocpdns.sandbox.com -m shell -a "systemctl restart dnsmasq"
 ---
 - name: Clone a Virtual Machine
   hosts: dns

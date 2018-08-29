@@ -1,0 +1,12 @@
+- name: copy ansible host file to installer and start installation
+  hosts: installer
+  tags:
+    - copy-host
+  tasks:
+    - name: Distribute hosts.example to installer
+      copy:
+        src: hosts.example
+        dest: /root
+        force: yes
+    - name: Execute prerequisite
+      shell: ansible-playbook -i /root/hosts.example /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml

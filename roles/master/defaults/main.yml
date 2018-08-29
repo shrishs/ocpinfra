@@ -2,3 +2,4 @@
 # defaults file for master
 maxmem: 3072MiB
 currentmem: 3072MiB
+dockervolsize: 5G

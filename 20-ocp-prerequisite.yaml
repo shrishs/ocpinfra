@@ -1,3 +1,8 @@
+#sudo ansible-playbook -i ../hosts 20-ocp-prerequisite.yaml
+#In case of individual node after the setup,One can execute the follwoing two command
+#command1: sudo ansible-playbook -i ../hosts 20-ocp-prerequisite.yaml --limit=node2.sandbox.com
+#command2: sudo ansible -i ../hosts ocpinstaller.sandbox.com -m shell -a "sshpass -p 'admin#123' ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no node2.sandbox.com"
+
 ---
 - name: generate key
   hosts: installer
@@ -17,6 +22,60 @@
 
     - name: Enable all repositories which are needed
       shell: subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-ose-3.10-rpms --enable=rhel-7-server-ansible-2.4-rpms
+
+- name: Install RPM based software
+  hosts: installer,master,node
+  become: true
+  become_user: root
+  tags:
+    - software
+    - base-package
+  tasks:
+    - name: Install software for OpenShift
+      yum:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - wget
+        - git
+        - net-tools
+        - bind-utils
+        - yum-utils
+        - iptables-services
+        - bridge-utils
+        - bash-completion
+        - kexec-tools
+        - sos
+        - psacct
+
+- name: Install RPM based software
+  hosts: installer,master,node
+  become: true
+  become_user: root
+  tags:
+    - software
+    - update
+  tasks:
+    - name: Update system to latest package
+      yum:
+        name: "*"
+        state: latest
+
+
+- name: Install openshift-ansible
+  hosts: installer,master,node
+  become: true
+  become_user: root
+  tags:
+    - software
+    - openshift-ansible
+  tasks:
+    - name: Update system to openshift-ansible package
+      yum:
+        name: openshift-ansible
+        state: latest
+
+
 
 - name: Installing sshpass
   hosts: installer
