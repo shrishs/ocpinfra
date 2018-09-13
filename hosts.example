@@ -15,19 +15,13 @@ master1.sandbox.com openshift_node_group_name='node-config-master'
 node1.sandbox.com openshift_node_group_name='node-config-compute'
 node2.sandbox.com openshift_node_group_name='node-config-infra'
 
-[nfs]
-#ose3-master1.test.example.com
-
-[lb]
-#ose3-lb.test.example.com
 
 # Create an OSEv3 group that contains the masters and nodes groups
 [OSEv3:children]
 masters
 nodes
 etcd
-#lb
-#nfs
+
 
 [OSEv3:vars]
 ###############################################################################
@@ -42,7 +36,7 @@ ansible_user=root
 # user must be configured for passwordless sudo
 #ansible_become=yes
 
-openshift_disable_check=memory_availability,disk_availability
+openshift_disable_check=memory_availability,disk_availability,package_availability,docker_image_availability
 
 # Specify the deployment type. Valid values are origin and openshift-enterprise.
 #openshift_deployment_type=origin
@@ -53,12 +47,12 @@ openshift_deployment_type=openshift-enterprise
 # use this to lookup the latest exact version of the container images, which is the tag actually used to configure
 # the cluster. For RPM installations we just verify the version detected in your configured repos matches this
 # release.
-openshift_release="3.10"
+#openshift_release="3.10"
 
 # default subdomain to use for exposed routes, you should have wildcard dns
 # for *.apps.test.example.com that points at your infra nodes which will run
 # your router
-openshift_master_default_subdomain=sandbox.com
+openshift_master_default_subdomain=apps.sandbox.com
 
 #Set cluster_hostname to point at your load balancer
 #openshift_master_cluster_hostname=ose3-lb.test.example.com
@@ -70,7 +64,7 @@ openshift_master_default_subdomain=sandbox.com
 ###############################################################################
 
 # Debug level for all OpenShift components (Defaults to 2)
-debug_level=2
+debug_level=4
 
 # Specify an exact container image tag to install or configure.
 # WARNING: This value will be used for all hosts in containerized environments, even those that have another version installed.
@@ -88,7 +82,7 @@ debug_level=2
 #system_images_registry="registry.access.redhat.com"
 
 # Manage openshift example imagestreams and templates during install and upgrade
-openshift_install_examples=true
+#openshift_install_examples=true
 
 # Configure logoutURL in the master config for console customization
 # See: https://docs.openshift.org/latest/install_config/web_console_customization.html#changing-the-logout-url
@@ -198,7 +192,7 @@ openshift_install_examples=true
 #osm_etcd_image=rhel7/etcd
 
 # htpasswd auth
-openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider'}]
+#openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider'}]
 # Defining htpasswd users
 #openshift_master_htpasswd_users={'user1': '<pre-hashed password>', 'user2': '<pre-hashed password>'}
 # or
@@ -385,12 +379,12 @@ openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 
 # Router selector (optional)
 # Router will only be created if nodes matching this label are present.
 # Default value: 'node-role.kubernetes.io/infra=true'
-openshift_hosted_router_selector='node-role.kubernetes.io/infra=true'
+# openshift_hosted_router_selector='node-role.kubernetes.io/infra=true'
 #
 # Router replicas (optional)
 # Unless specified, openshift-ansible will calculate the replica count
 # based on the number of nodes matching the openshift router selector.
-openshift_hosted_router_replicas=1
+# openshift_hosted_router_replicas=1
 #
 # Router force subdomain (optional)
 # A router path format to force on all routes used by this router
@@ -440,7 +434,7 @@ openshift_hosted_registry_selector='node-role.kubernetes.io/infra=true'
 # Registry replicas (optional)
 # Unless specified, openshift-ansible will calculate the replica count
 # based on the number of nodes matching the openshift registry selector.
-openshift_hosted_registry_replicas=1
+# openshift_hosted_registry_replicas=1
 #
 # Validity of the auto-generated certificate in days (optional)
 #openshift_hosted_registry_cert_expire_days=730
@@ -694,7 +688,7 @@ openshift_hosted_registry_replicas=1
 #openshift_prometheus_alertbuffer_storage_type=pvc
 
 # Configure the multi-tenant SDN plugin (default is 'redhat/openshift-ovs-subnet')
-# os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
+os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
 
 # Disable the OpenShift SDN plugin
 # openshift_use_openshift_sdn=False
