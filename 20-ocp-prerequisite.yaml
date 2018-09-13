@@ -4,7 +4,17 @@
 #command2: sudo ansible -i ../hosts ocpinstaller.sandbox.com -m shell -a "sshpass -p 'admin#123' ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no node2.sandbox.com"
 
 ---
-- name: generate key
+- name: copy public key form localhost to all other nodes
+  hosts: all
+  connection: local
+  tags:
+    - copy-id-from-local-to-all-provisioned
+  tasks:
+    - name: Set authorized key took from file
+      shell: "sshpass -p 'admin#123' ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no {{ ipadresstoset }} -f"
+
+
+- name: generate key on installer
   hosts: installer
   tags:
     - generate key
@@ -12,8 +22,50 @@
     - name: generate key
       shell: "ssh-keygen -f /root/.ssh/id_rsa -P \"\" "
 
-- name: disable and enable required repo
-  hosts: installer,master,node
+
+- name: disable and enable required repo for installer
+  hosts: installer
+  tags:
+    - repos
+  tasks:
+    - name: Disable all repositories for installer
+      shell: subscription-manager repos --disable=*
+
+    - name: Enable all repositories which are needed
+      shell: subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-ose-3.10-rpms --enable=rhel-7-server-ansible-2.4-rpms
+
+- name: Installing sshpass
+  hosts: installer
+  tags:
+    - sshpass
+  tasks:
+    - name: Install sshpass on installer
+      yum:
+        name: sshpass
+        state: latest
+
+
+- name: copy public key form installer to all other nodes
+  hosts: installer
+  tags:
+    - copy-id
+  tasks:
+    - name: check contents for emptiness
+      debug:
+        var: "{{ hostvars[item]['inventory_hostname'] }}"
+      with_items:
+         - "{{ groups['master'] }}"
+         - "{{ groups['node'] }}"
+
+    - name: Set authorized key took from file
+      shell: "sshpass -p 'admin#123' ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no {{ hostvars[item]['inventory_hostname'] }} -f"
+      with_items:
+         - "{{ groups['master'] }}"
+         - "{{ groups['node'] }}"
+
+
+- name: disable and enable required repo for all except installer
+  hosts: master,node
   tags:
     - repos
   tasks:
@@ -61,6 +113,32 @@
         name: "*"
         state: latest
 
+- name: Reboot installer,master,node machines
+  hosts: installer,master,node
+  connection: local
+  tags:
+    - reboot
+  tasks:
+    - name: reboot {{inventory_hostname}}
+      shell: virsh reboot {{inventory_hostname}}
+    - pause:
+        seconds: 10
+
+
+- name: Verify if all the machines are up again
+  hosts: installer,master,node
+  connection: local
+  tags:
+    - verify-reboot
+  tasks:
+    - name: Listing to Verify if all the machines are up again
+      shell: virsh list --state-running --name
+      register: output
+      until: output.stdout.find(inventory_hostname) != -1
+      delay: 10
+      retries: 5
+
+
 
 - name: Install openshift-ansible
   hosts: installer,master,node
@@ -74,34 +152,3 @@
       yum:
         name: openshift-ansible
         state: latest
-
-
-
-- name: Installing sshpass
-  hosts: installer
-  tags:
-    - sshpass
-  tasks:
-    - name: Install sshpass on installer
-      yum:
-        name: sshpass
-        state: latest
-
-
-- name: copy public key form installer to all other nodes
-  hosts: installer
-  tags:
-    - copy-id
-  tasks:
-    - name: check contents for emptiness
-      debug:
-        var: "{{ hostvars[item]['inventory_hostname'] }}"
-      with_items:
-         - "{{ groups['master'] }}"
-         - "{{ groups['node'] }}"
-
-    - name: Set authorized key took from file
-      shell: "sshpass -p 'admin#123' ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no {{ hostvars[item]['inventory_hostname'] }}"
-      with_items:
-         - "{{ groups['master'] }}"
-         - "{{ groups['node'] }}"
