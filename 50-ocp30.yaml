@@ -1,3 +1,5 @@
+# review file and copy it to the installer cat hosts.example | egrep -v "(^#.*|^$)"
+# check the facts ansible-playbook -i /root/hosts.example /usr/share/ansible/openshift-ansible/playbooks/byo/openshift_facts.yml
 - name: copy ansible host file to installer and start installation
   hosts: installer
   tags:
@@ -8,5 +10,8 @@
         src: hosts.example
         dest: /root
         force: yes
-    - name: Execute prerequisite
-      shell: ansible-playbook -i /root/hosts.example /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
+    - name: setting ansible log file
+      shell: echo "log_path = /root/ansible.log" >>/etc/ansible/ansible.cfg
+  #  - name: Execute prerequisite
+  #    shell: ansible-playbook -i /root/hosts.example /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
+  #    shell: ansible-playbook -i /root/hosts.example /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml
