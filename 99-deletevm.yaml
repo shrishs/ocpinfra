@@ -1,6 +1,8 @@
+#sudo ansible-playbook -i ../hosts 99-deletevm.yaml -e hostname="dns,master,installer,node" -v
+
 
 - name: Unsubscribe the Virtual Machine
-  hosts: all
+  hosts: "{{ hostname }}"
   serial: 1
   tags:
     - unsubscribe
@@ -14,7 +16,7 @@
         force_register: yes
 
 - name: shutdown the Virtual Machine
-  hosts: all
+  hosts: "{{ hostname }}"
   connection: local
   serial: 1
   tags:
@@ -26,7 +28,7 @@
         seconds: 15
 
 - name: delete the Virtual Machine
-  hosts: all
+  hosts: "{{ hostname }}"
   connection: local
   serial: 1
   tags:
