@@ -25,7 +25,7 @@
       when: vmlist.stdout.find(inventory_hostname) == -1
 
     - name: Cloning a new node
-      shell: virt-clone --connect qemu:///system --original rhel75toclone --name  {{inventory_hostname}} --file /home/shsrivas/VirtualMachines/{{inventory_hostname}}.qcow2
+      shell: virt-clone --connect qemu:///system --original {{ imagetoclone }} --name  {{inventory_hostname}} --file /home/shsrivas/VirtualMachines/{{inventory_hostname}}.qcow2
       when: vmlist.stdout.find(inventory_hostname) == -1
 
     - name: check groupname
@@ -76,7 +76,7 @@
     - debug: var=tohostname.stdout
 
     - name: Set authorized key took from file
-      shell: sshpass -p 'admin#123' ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no {{tohostname.stdout}}
+      shell: sshpass -p 'admin#123' ssh-copy-id -i /root/.ssh/id_rsa.pub -o StrictHostKeyChecking=no {{tohostname.stdout}} -f
 
 - name: set facts for Virtual Machine
   hosts: installer,master,node
@@ -112,7 +112,6 @@
 
 - name: Execute common role for all except dns
   hosts: installer,master,node
-  serial: 1
   tags:
     - common
   tasks:
