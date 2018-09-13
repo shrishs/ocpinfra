@@ -75,73 +75,9 @@
     - name: Enable all repositories which are needed
       shell: subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-ose-3.10-rpms --enable=rhel-7-server-ansible-2.4-rpms
 
-- name: Install RPM based software
-  hosts: installer,master,node
-  become: true
-  become_user: root
-  tags:
-    - software
-    - base-package
-  tasks:
-    - name: Install software for OpenShift
-      yum:
-        name: "{{ item }}"
-        state: latest
-      with_items:
-        - wget
-        - git
-        - net-tools
-        - bind-utils
-        - yum-utils
-        - iptables-services
-        - bridge-utils
-        - bash-completion
-        - kexec-tools
-        - sos
-        - psacct
-
-- name: Install RPM based software
-  hosts: installer,master,node
-  become: true
-  become_user: root
-  tags:
-    - software
-    - update
-  tasks:
-    - name: Update system to latest package
-      yum:
-        name: "*"
-        state: latest
-
-- name: Reboot installer,master,node machines
-  hosts: installer,master,node
-  connection: local
-  tags:
-    - reboot
-  tasks:
-    - name: reboot {{inventory_hostname}}
-      shell: virsh reboot {{inventory_hostname}}
-    - pause:
-        seconds: 10
-
-
-- name: Verify if all the machines are up again
-  hosts: installer,master,node
-  connection: local
-  tags:
-    - verify-reboot
-  tasks:
-    - name: Listing to Verify if all the machines are up again
-      shell: virsh list --state-running --name
-      register: output
-      until: output.stdout.find(inventory_hostname) != -1
-      delay: 10
-      retries: 5
-
-
 
 - name: Install openshift-ansible
-  hosts: installer,master,node
+  hosts: installer
   become: true
   become_user: root
   tags:
