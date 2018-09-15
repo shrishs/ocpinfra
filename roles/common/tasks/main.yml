@@ -2,25 +2,35 @@
 # tasks file for common
 - name: changing from dhcp to none
   shell: sed -i -- 's/dhcp/none/' /etc/sysconfig/network-scripts/ifcfg-eth0
-- name: making a static ip
-  shell: echo -e "IPADDR=\"{{ipadresstoset}}\"\nNETMASK=\"255.255.255.0\"\nGATEWAY=\"192.168.122.1\"" >> /etc/sysconfig/network-scripts/ifcfg-eth0
 
-- name: making entry in ifcfg-eth0 -1
-  shell: echo -e "PEERDNS=\"no\"" >> /etc/sysconfig/network-scripts/ifcfg-eth0
 
-- name: making entry in ifcfg-eth0 -2
-  shell: echo -e "PEERROUTES=\"yes\"" >> /etc/sysconfig/network-scripts/ifcfg-eth0
 
-- name: making entry in ifcfg-eth0 -3
-  shell: echo -e "IPV6_PEERDNS=\"no\"" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+- name: making entry in /etc/sysconfig/network-scripts/ifcfg-eth0
+  blockinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-eth0
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ipadresstoset}}"
+    block: |
+      IPADDR="{{ipadresstoset}}"
+      NETMASK="255.255.255.0"
+      GATEWAY="192.168.122.1"
+      PEERDNS="no"
+      PEERROUTES="yes"
+      IPV6_PEERDNS="no"
+      IPV6_PEERROUTES="yes"
 
-- name: making entry in ifcfg-eth0 -4
-  shell: echo -e "IPV6_PEERROUTES=\"yes\"" >> /etc/sysconfig/network-scripts/ifcfg-eth0
-  
 
 - name: Adding DNS entry
-  shell: echo -e "DNS1=\"{{ hostvars[item]['ipadresstoset'] }}\"\nDOMAIN=\"sandbox.com\"" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+  blockinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-eth0
+    block: |
+      DNS1="{{ hostvars[item]['ipadresstoset'] }}"
+      DOMAIN="sandbox.com"
   with_items:
      - "{{ groups['dns'] }}"
-- name: making entry in sshd_config
-  shell: echo -e "UseDNS no" >> /etc/ssh/sshd_config
+
+
+- name: making entry in /etc/ssh/sshd_config
+  blockinfile:
+    path: /etc/ssh/sshd_config
+    block: |
+      UseDNS no
