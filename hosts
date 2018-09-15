@@ -18,3 +18,5 @@ redhat_username=xxxxxxxx
 redhat_password=xxxxxxxx
 redhat_pool=xxxxxxxx
 volume_path=/xxxx/xx/xxxxx
+imagetoclone=rhel7.5
+vmdirectory=/home/shsrivas/VirtualMachines

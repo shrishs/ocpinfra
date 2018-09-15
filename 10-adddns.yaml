@@ -22,7 +22,7 @@
       when: vmlist.stdout.find(inventory_hostname) == -1
 
     - name: Cloning a new node
-      shell: virt-clone --connect qemu:///system --original {{imagetoclone}} --name  {{inventory_hostname}} --file /home/shsrivas/VirtualMachines/{{inventory_hostname}}.qcow2
+      shell: virt-clone --connect qemu:///system --original {{imagetoclone}} --name  {{inventory_hostname}} --file {{ vmdirectory }}/{{inventory_hostname}}.qcow2
       when: vmlist.stdout.find(inventory_hostname) == -1
 
     - name: check groupname
@@ -149,15 +149,3 @@
       until: output.stdout.find(inventory_hostname) != -1
       delay: 10
       retries: 5
-
-
-- name: Reboot dns machines
-  hosts: dns
-  connection: local
-  tags:
-    - reboot
-  tasks:
-    - name: reboot {{inventory_hostname}}
-      shell: virsh reboot {{inventory_hostname}}
-    - pause:
-        seconds: 10

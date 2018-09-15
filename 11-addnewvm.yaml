@@ -1,4 +1,4 @@
-# ansible-playbook -i ../hosts 11-addnewvm.yaml
+# sudo ansible-playbook -i ../hosts 11-addnewvm.yaml
 # One can run it for the the single node by limiting it.
 # ansible-playbook -i ../hosts 11-addnewvm.yaml  --limit=node2.sandbox.com
 # Running the same command agin throws exeception but does not harm
@@ -25,7 +25,7 @@
       when: vmlist.stdout.find(inventory_hostname) == -1
 
     - name: Cloning a new node
-      shell: virt-clone --connect qemu:///system --original {{ imagetoclone }} --name  {{inventory_hostname}} --file /home/shsrivas/VirtualMachines/{{inventory_hostname}}.qcow2
+      shell: virt-clone --connect qemu:///system --original {{ imagetoclone }} --name  {{inventory_hostname}} --file {{ vmdirectory }}{{inventory_hostname}}.qcow2
       when: vmlist.stdout.find(inventory_hostname) == -1
 
     - name: check groupname
